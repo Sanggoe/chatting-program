@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <netdb.h>
+#include <socket.h>
 
 #define MAXLINE 511
 #define MAX_SOCK 1024
@@ -24,4 +24,32 @@ void addClient(int s, struct sockaddr_in *newcliaddr); // 새로운 참가자 �
 void removeClient(int s);	// 탈퇴 처리 함수
 int set_nonblock(int sockfd);	// 소켓을 넌블록으로 설정
 int is_nonblock(int sockfd);	// 소켓이 넌블록 모드인지 확인
-int client_re
+int ready_to_listen(int host, int port, int backlog);  // 소켓 생성과 bind 및 listen 상태
+void errquit(char *mesg) {	// 에러 발생시 종료 함수
+	perror(mesg);
+	exit(1);
+}
+
+int main(int argc, char *argv[]) {
+	struct sockaddr_in cliaddr;
+	char buf[MAXLINE+1];
+	int i, j, nbyte, count;
+	int accp_sock, clilen, addrlen;
+
+	if (argc != 2) {
+		printf("사용법 : %s port\n", argv[0]);
+		exit(0);
+	}
+
+	// 소켓 생성, bind, listen 대기 함수 호출
+	printf("%s", INADDR_ANY);
+
+//	listen_sock = ready_to_listen(INADDR_ANY, atoi()
+
+
+
+
+
+
+	return 0;
+}
