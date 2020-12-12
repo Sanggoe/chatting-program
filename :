@@ -56,7 +56,7 @@ char *START_STRING = "Connected to chat_server \n";
 int num_chat = 0; 		// 참가자 수
 cli member_info_list[MAX_SOCK];	// 참가자 정보 목록
 int num_notice = 1;
-char* notice[MAX_NOTICE] = {"채팅창 이용 방법 **************************************\n/p# 참가자이름 메시지 : 특정 인원에게 비공개 메시지 보내기\n/?# : 공지사항 목록 요청\n/m# : 참가자 목록 요청\n/n+# 내용 : (방장 권한) 공지사항 추가\n/n-# 숫자 : (방장 권한) n번째 공지사항 삭제\n***********************************************************\n"}; // 공지 목록
+char* notice[MAX_NOTICE] = {"\n채팅창 이용 방법 **************************************\n/p# 참가자이름 메시지 : 특정 인원에게 비공개 메시지 보내기\n/?# : 공지사항 목록 요청\n/m# : 참가자 목록 요청\n/n+# 내용 : (방장 권한) 공지사항 추가\n/n-# 숫자 : (방장 권한) n번째 공지사항 삭제\n*************************************"}; // 공지 목록
 int listen_sock;		// 연결 요청 전용 소켓
 
 void addClient(int s, struct sockaddr_in *newcliaddr); // 새로운 참가자 추가
@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
 				errquit("set_nonblock fail");
 			}
 			addClient(accp_sock, &cliaddr);
-			//send(accp_sock, START_STRING, strlen(START_STRING), 0);
+			send(accp_sock, START_STRING, strlen(START_STRING), 0);
 			sendNoticeList(accp_sock);
 			printf("%d번째 참가자 추가.\n", num_chat);
 		}
@@ -245,7 +245,7 @@ void addClient(int s, struct sockaddr_in *newcliaddr) {
 
 // 명령어인지 판단
 char whichCommend(char* buf) {
-	puts("명령어?");
+	puts("명령어?")
 	if (buf[0] == '/' && buf[2] == '#') {
 		return buf[1];
 	} else if (strstr(buf, PRIVATE_SENDING) != NULL) {
@@ -259,7 +259,7 @@ char whichCommend(char* buf) {
 	} else if (strstr(buf, REMOVE_NOTICE) != NULL) {
 		return '-';
 	} else {
-		puts("노노 명령어 아님");
+		puts("노노 명령어 아님")
 		return 0;
 	}
 }
@@ -267,11 +267,7 @@ char whichCommend(char* buf) {
 // 방장인지 확인
 int isManager(int i) {
 	puts("isManager 호출");
-	if (strstr(member_info_list[i].name, "manager") != NULL) {
-		return 1;
-	} else {
-		return -1;
-	}
+	return 1;
 }
 
 //int isAddable()
@@ -280,8 +276,7 @@ int isManager(int i) {
 int addNotice(char* content) {
 	puts("addNotice 호출");
 	if (num_notice < MAX_NOTICE) {
-		notice[num_notice] = (char*)malloc(strlen(content));
-	        strcpy(notice[num_notice++], strstr(content, ADD_NOTICE)+5);
+		notice[num_notice++] = content;
 		return 0;
 	} else {
 		return -1;
@@ -290,8 +285,8 @@ int addNotice(char* content) {
 
 // 공지 번호 얻기
 int getNoticeNum(char* msg) {
-	char num = msg[strlen(msg)-2];
-	printf("1. msg : %s\n2. strlen(msg) : %d\n3. num = %c !!!\n", msg, strlen(msg), num);
+	char num = msg[strlen(msg)];
+	printf("num = %c", num);
 	puts("getNoticeNum 호출");
 	if (isdigit(num)) {
 		printf("정수 반환! %c\n", num-'0');
@@ -304,14 +299,9 @@ int getNoticeNum(char* msg) {
 
 // 공지사항 삭제
 int removeNotice(int num) {
-	int i;
 	puts("removeNotice 호출");
-	if (num >= 1 && num < num_notice) {
-		free(notice[num]);
-		for (i=num; i<num_notice-1; i++) {
-			notice[i] = notice[i+1];
-		}
-		num_notice--;
+	if (num > 1 && num < MAX_NOTICE) {
+		notice[num_notice--] = 0;
 		return 0;
 	} else {
 		return -1;
@@ -324,8 +314,7 @@ void sendNoticeList(int s) {
 	int i;
 	
 	for (i=0; i<num_notice; i++) {
-		sprintf(&noticeList[strlen(noticeList)], "%d. %s", i, notice[i]);
-		puts(notice[i]);
+		sprintf(&noticeList[strlen(noticeList)], "%d. %s\n", i, notice[i]);
 	}
 	send(s, noticeList, strlen(noticeList), 0);
 }
