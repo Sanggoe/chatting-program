@@ -1,12 +1,13 @@
 //----------------------------------------------------------------------
 // 파일명 : projcli.c
-// 기  능 : 1. 서버에 접속해 키보드 입력을 서버로 전달함
-// 	    2. 서버로부터 오는 메시지를 화면에 출력함
-// 	    3. 현재 접속자 목록을 요청할 수 있음
-// 	    4. 특정 아이디에 메시지를 전달할 수 있음
+// 기  능 : 1. 서버에 접속해 키보드 입력을 서버로 전달
+// 	    2. 서버로부터 오는 메시지를 화면에 출력
+// 	    3. 현재 접속자 목록 요청
+// 	    4. 공지사항 목록 요청
+// 	    4. 특정 아이디에 메시지 전달
 // 	    5. 방장인 경우
-// 	    	5-1. 특정 아이디를 강퇴시키라는 메시지를 전달할 수 있음
-// 	    	5-2. 방장인 경우, 공지사항을 추가할 수 있음
+// 	    	5-1. 특정 아이디를 강퇴시키라는 메시지 전달
+// 	    	5-2. 방장인 경우, 공지사항 추가
 // 컴파일 : cc -o projcli projcli.c
 // 사용법 : ./projcli 127.0.0.1 8008 name
 // 모  드 : selecting 방식
@@ -15,7 +16,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <netdb.h>
-//#include <time.h>
 //#include <fcntl.h>
 
 #define MAXLINE 1000
@@ -31,6 +31,7 @@ void errquit(char *mesg) {
 int main(int argc, char *argv[]) {
 	char allMessage[MAXLINE + NAME_LEN],	// name + massege를 위한 버퍼
 	     *message;				// allMessage에서 메시지 부분의 포인터
+	char nameBuf[NAME_LEN];
 	int maxfdp1,	// 소켓 디스크립터 중 최대 크기
 	    s,		// 서버와 소통할 소켓
 	    namelen;	// name의 길이
@@ -45,11 +46,19 @@ int main(int argc, char *argv[]) {
 	namelen = strlen(allMessage);
 	message = allMessage + namelen; // 메시지 시작부분 지정
 
-	s = connect_to_server(AF_INET, argv[1], atoi(argv[2]));
+	s = connect_to_server(AF_INET, argv[1], atoi(argv[2])); // 서에 연결
 	if (s == -1)
 		errquit("connect_to_server fail");
 
 	puts("연결 되었습니다.");
+
+	sprintf(nameBuf, "/a# %s", argv[3]);
+	puts(nameBuf);
+	// 서버에게 참가자 이름을 전달하는 최초 메시지 전달
+	if (send(s, nameBuf, strlen(nameBuf), 0) < 0) {
+        	puts("Error : Write error on socket.");
+	}
+
 	maxfdp1 = s+1;
 	FD_ZERO(&read_fds);
 
@@ -77,7 +86,6 @@ int main(int argc, char *argv[]) {
 					puts("Error : Write error on socket.");
 				}
 				if (strstr(message, EXIT_STRING) != NULL) {
-					puts("회의방을 종료합니다.");
 					close(s);
 					exit(0);
 				}
