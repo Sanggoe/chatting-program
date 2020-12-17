@@ -57,7 +57,7 @@ char* START_STRING = "Connected to chat_server \n";
 int num_chat = 0; 		// 참가자 수
 cli member_info_list[MAX_SOCK];	// 참가자 정보 목록
 int num_notice = 1;
-char* notice[MAX_NOTICE] = {"채팅창 이용 방법 **************************************\n/n+# 내용 : (방장 권한) 공지사항 추가\n/n-# 숫자 : (방장 권한) n번째 공지사항 삭제\n/k# 참가자이름 공백 : (방장 권한) 특정 인원 강퇴\n/p# 참가자이름 메시지 : 특정 인원에게 비공개 메시지 보내기\n/?# : 공지사항 목록 요청\n/m# : 참가자 목록 요청\n***********************************************************\n"}; // 공지 목록
+char* notice[MAX_NOTICE] = {"채팅창 이용 방법 ******************************************\n/n+# 내용 : (방장 권한) 공지사항 추가\n/n-# 숫자 : (방장 권한) n번째 공지사항 삭제\n/k# 참가자이름 공백 : (방장 권한) 특정 인원 강퇴\n/p# 참가자이름 메시지 : 특정 인원에게 비공개 메시지 보내기\n/?# : 공지사항 목록 요청\n/m# : 참가자 목록 요청\n***********************************************************\n"}; // 공지 목록
 int listen_sock;		// 연결 요청 전용 소켓
 
 char whichCommend(char *msg);	// 어떤 명령어인지 판단
@@ -93,8 +93,6 @@ int main(int argc, char *argv[]) {
 	}
 
 	// 소켓 생성, bind, listen 대기 함수 호출
-	printf("%s", INADDR_ANY);
-
 	listen_sock = ready_to_listen(INADDR_ANY, atoi(argv[1]), 5);
 
 	if (listen_sock == -1)
@@ -102,9 +100,9 @@ int main(int argc, char *argv[]) {
 	if (set_nonblock(listen_sock) == -1)
 		errquit("set_nonblock fail");
 
+	puts("서버 개설");
 	for (count=0; ; count++) { // 무한루프
 		if (count == 100000) {
-			putchar('.');
 			fflush(stdout);
 			count = 0;
 		}
@@ -151,6 +149,7 @@ int main(int argc, char *argv[]) {
 						}
 						break;
 					case 'p': // 개별 메시지 전달
+						printf("");
 						int privateSock = findMemberSock(buf); // 특정 참가자 소켓 찾기
 						if (privateSock < 0) {
 							sendPrivateMessage("존재하지 않는 참가자 입니다.", member_info_list[i].s);
@@ -162,6 +161,7 @@ int main(int argc, char *argv[]) {
 						break;
 					case '?': // 공지 리스트 요청에 대한 전달
 						sendNoticeList(member_info_list[i].s);
+						puts("공지사항 목록 전송 완료");
 						break;
 					case 'm': // 참가자 목록 요청에 대한 전달
 						sendMemberList(member_info_list[i].s);
@@ -311,7 +311,6 @@ void sendNoticeList(int s) {
 	
 	for (i=0; i<num_notice; i++) {
 		sprintf(&noticeList[strlen(noticeList)], "%d. %s", i, notice[i]);
-		puts(notice[i]);
 	}
 	send(s, noticeList, strlen(noticeList), 0);
 }
@@ -336,7 +335,7 @@ int findMemberSock(char *msg) {
 	temp = strtok(temp, " "); // 토큰으로 분리하여 참가자 이름을 추출
 
 	for (i=0; i<num_chat; i++) {
-		if (strstr(member_info_list[i].name, temp) != NULL) {
+		if (strstr(temp, member_info_list[i].name) != NULL) {
 			free(temp);
 			puts("존재하는 참가자");
 			return i;
@@ -358,7 +357,7 @@ char* tokenMessage(char *msg) {
 
 // 특정 참가자에게 비공개 메시지 전송
 void sendPrivateMessage(char *msg, int s) {
-	puts("특정 참가자에게 메시지 전송");
+	puts("개별 메시지 전송");
 	send(s, msg, strlen(msg), 0);
 }
 

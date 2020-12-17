@@ -50,10 +50,7 @@ int main(int argc, char *argv[]) {
 	if (s == -1)
 		errquit("connect_to_server fail");
 
-	puts("연결 되었습니다.");
-
 	sprintf(nameBuf, "/a# %s", argv[3]);
-	puts(nameBuf);
 	// 서버에게 참가자 이름을 전달하는 최초 메시지 전달
 	if (send(s, nameBuf, strlen(nameBuf), 0) < 0) {
         	puts("Error : Write error on socket.");
