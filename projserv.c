@@ -37,7 +37,7 @@
 #define MAXLINE 511
 #define MAX_SOCK 1024
 #define NAME_LEN 20
-#define MAX_NOTICE 6
+#define MAX_NOTICE 4
 
 typedef struct member_information {
 	int s;
@@ -203,7 +203,7 @@ int main(int argc, char *argv[]) {
 								removeClient(privateSock);
 							}
 						} else { // 방장 외 접근 금지 알림 전송
-							sendPrivateMessage("Only Manager can execute this commend.", member_info_list[i].s);
+							sendPrivateMessage("방장만 접근할 수 있는 명령입니다.", member_info_list[i].s);
 						}
 				}
 
@@ -265,8 +265,8 @@ int isManager(int i) {
 // 공지사항 추가
 int addNotice(char* content) {
 	if (num_notice < MAX_NOTICE) {
-		notice[num_notice] = (char*)malloc(strlen(content));
-	        strcpy(notice[num_notice++], strstr(content, ADD_NOTICE)+5);
+		notice[num_notice] = (char*)malloc(strlen(content)+1);
+	        sprintf(notice[num_notice++], "%s", strstr(content, ADD_NOTICE)+5);
 		puts("공지사항 추가 완료");
 		return 0;
 	} else {
@@ -287,7 +287,7 @@ int getNoticeNum(char* msg) {
 // 공지사항 삭제
 int removeNotice(int num) {
 	int i;
-	if (num >= 1 && num < num_notice) {
+	if (num > 0 && num < num_notice) {
 		free(notice[num]);
 		for (i=num; i<num_notice-1; i++) {
 			notice[i] = notice[i+1];
@@ -302,10 +302,9 @@ int removeNotice(int num) {
 
 // 공지사항 목록 전송
 void sendNoticeList(int s) {
-	char noticeList[MAXLINE] = {0};
+	char noticeList[MAXLINE*2] = {0}; 
 	int i;
-	
-	puts("이 후 문제 발생");
+		
 	for (i=0; i<num_notice; i++) {
 		sprintf(&noticeList[strlen(noticeList)], "%d. %s", i, notice[i]);
 	}
@@ -329,7 +328,7 @@ void sendMemberList(int s) {
 int findMemberSock(char *msg) {
 	int i;
 	char *temp = (char*)malloc(strlen(msg)); // 임시 변수할당
-	strcpy(temp, strstr(msg, "/")+4); // 명령어 뒤에오는 첫 글자의 주소를 복사
+	sprintf(temp, "%s", strstr(msg, "/")+4); // 명령어 뒤에오는 첫 글자의 주소를 복사
 	temp = strtok(temp, " "); // 토큰으로 분리하여 참가자 이름을 추출
 
 	for (i=0; i<num_chat; i++) {
