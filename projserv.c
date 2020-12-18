@@ -52,12 +52,11 @@ char* ADD_MEMBER_NAME = "/a# ";
 char* PRIVATE_SENDING = "/p# ";
 char* REQUEST_NOTICE = "/?#";
 char* REQUEST_MEMBER = "/m#";
-char* START_STRING = "Connected to chat_server \n";
 
 int num_chat = 0; 		// 참가자 수
 cli member_info_list[MAX_SOCK];	// 참가자 정보 목록
 int num_notice = 1;
-char* notice[MAX_NOTICE] = {"채팅창 이용 방법 ******************************************\n/n+# 내용 : (방장 권한) 공지사항 추가\n/n-# 숫자 : (방장 권한) n번째 공지사항 삭제\n/k# 참가자이름 공백 : (방장 권한) 특정 인원 강퇴\n/p# 참가자이름 메시지 : 특정 인원에게 비공개 메시지 보내기\n/?# : 공지사항 목록 요청\n/m# : 참가자 목록 요청\n***********************************************************\n"}; // 공지 목록
+char* notice[MAX_NOTICE] = {"채팅창 이용 방법 ******************************************\n/n+# 내용 : (방장 권한) 공지사항 추가\n/n-# 숫자 : (방장 권한) n번째 공지사항 삭제\n/k# 참가자이름 공백 : (방장 권한) 특정 인원 강퇴\n/p# 참가자이름 메시지 : 특정 인원에게 비공개 메시지 보내기\n/?# : 공지사항 목록 요청\n/m# : 참가자 목록 요청\n********************************************************\n"}; // 공지 목록
 int listen_sock;		// 연결 요청 전용 소켓
 
 char whichCommend(char *msg);	// 어떤 명령어인지 판단
@@ -115,8 +114,7 @@ int main(int argc, char *argv[]) {
 				errquit("set_nonblock fail");
 			}
 			addClient(accp_sock);
-			//send(accp_sock, START_STRING, strlen(START_STRING), 0);
-			sendNoticeList(accp_sock);
+			sendNoticeList(accp_sock); // 참가자에게 공지사항 전달
 			printf("%d번째 참가자 추가.\n", num_chat);
 		}
 
@@ -159,23 +157,21 @@ int main(int argc, char *argv[]) {
 							sendPrivateMessage(msg, member_info_list[privateSock].s);
 						}
 						break;
-					case '?': // 공지 리스트 요청에 대한 전달
+					case '?': // 공지사항 목록 요청에 대한 전송
 						sendNoticeList(member_info_list[i].s);
-						puts("공지사항 목록 전송 완료");
 						break;
-					case 'm': // 참가자 목록 요청에 대한 전달
+					case 'm': // 참가자 목록 요청에 대한 전송
 						sendMemberList(member_info_list[i].s);
 						break;
 					case '+': // (방장 권한) 공지사항 추가 및 새 공지 알림
 						if (isManager(i) != -1) { // 방장 확인
 							if (addNotice(buf) < 0) { // 추가 실패 알림
-								sendPrivateMessage("공지사항이 꽉 차 더할 수 없습니다..", member_info_list[i].s);
-							} else { // 추가 성공 및 참가자에게 공지사항 전달
-								sendPrivateMessage("공지가 추가되었습니다.", member_info_list[i].s);
+								sendPrivateMessage("공지사항이 꽉차서 추가할 수 없습니다.", member_info_list[i].s);
+							} else { // 추가 성공 및 참가자에게 공지사항 전송
+								sendPrivateMessage("공지가 추가되었습니다.\n", member_info_list[i].s);
 								for (j=0; j<num_chat; j++) {
-									sendNoticeList(member_info_list[j].s); // 모두에게 공지사항 전달
+									sendNoticeList(member_info_list[j].s); // 모두에게 공지사항 전송
 								}
-								puts("공지사항 목록 전송 완료");
 							}
 						} else { // 방장 외 접근 금지 알림 전송
 							sendPrivateMessage("방장만 접근할 수 있는 명령입니다.", member_info_list[i].s);
@@ -190,14 +186,14 @@ int main(int argc, char *argv[]) {
 								} else { // 삭제 성공
 									sendPrivateMessage("공지가 삭제되었습니다.", member_info_list[i].s);
 								}
-							} else { // 올바른 숫자가 아닌 경우 오류 메시지 전달
+							} else { // 올바른 숫자가 아닌 경우 오류 메시지 전송
 								sendPrivateMessage("옳은 명령이 아닙니다.", member_info_list[i].s);
 							}
 						} else { // 방장 외 접근 금지 알림 전송
 							sendPrivateMessage("방장만 접근할 수 있는 명령입니다.", member_info_list[i].s);
 						}
 						break;
-					case 'k': // 참가자 강퇴
+					case 'k':
 						if (isManager(i) != -1) { // 방장 확인
 							int privateSock = findMemberSock(buf); // 특정 참가자 소켓 찾기
 							if (privateSock < 0) { // 존재하지 않는 참가자 알림
@@ -309,10 +305,12 @@ void sendNoticeList(int s) {
 	char noticeList[MAXLINE] = {0};
 	int i;
 	
+	puts("이 후 문제 발생");
 	for (i=0; i<num_notice; i++) {
 		sprintf(&noticeList[strlen(noticeList)], "%d. %s", i, notice[i]);
 	}
 	send(s, noticeList, strlen(noticeList), 0);
+	puts("공지사항 목록 전송 완료");
 }
 
 // 참가자 정보 목록 전송
